@@ -183,7 +183,8 @@ export default function OAuthModal({ isOpen, provider, providerInfo, onSuccess, 
         // Always use fixed port 1455 as redirect_uri (Codex requirement)
         redirectUri = "http://localhost:1455/auth/callback";
       } else {
-        redirectUri = `http://localhost:${appPort}/callback`;
+        // Use current origin for redirect URI (works for both localhost and production domains)
+        redirectUri = `${window.location.origin}/callback`;
       }
 
       // Build authorize URL, optionally passing provider-specific metadata (e.g. gitlab clientId)
