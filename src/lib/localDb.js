@@ -7,7 +7,7 @@ import lockfile from "proper-lockfile";
 import { DATA_DIR } from "@/lib/dataDir.js";
 
 const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
-const isCloud = typeof caches !== 'undefined' || typeof caches === 'object';
+const isCloud = !!process.env.VERCEL || (typeof caches !== 'undefined' && typeof caches === 'object');
 const DB_FILE = isCloud ? null : path.join(DATA_DIR, "db.json");
 
 if (!isCloud && !fs.existsSync(DATA_DIR)) {

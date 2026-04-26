@@ -4,7 +4,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { DATA_DIR } from "@/lib/dataDir.js";
 
-const isCloud = typeof caches !== "undefined" && typeof caches === "object";
+const isCloud = !!process.env.VERCEL || (typeof caches !== "undefined" && typeof caches === "object");
 
 const DEFAULT_MAX_RECORDS = 200;
 const DEFAULT_BATCH_SIZE = 20;

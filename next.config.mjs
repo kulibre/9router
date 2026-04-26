@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isVercel = !!process.env.VERCEL;
+
 const nextConfig = {
-  output: "standalone",
-  serverExternalPackages: ["better-sqlite3"],
+  // output: "standalone" is for self-hosted Docker/Node only — NOT compatible with Vercel
+  ...(isVercel ? {} : { output: "standalone" }),
+  serverExternalPackages: isVercel ? [] : ["better-sqlite3"],
   images: {
     unoptimized: true
   },

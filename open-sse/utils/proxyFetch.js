@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import { MEMORY_CONFIG } from "../config/runtimeConfig.js";
 
-const isCloud = typeof caches !== "undefined" && typeof caches === "object";
+const isCloud = !!process.env.VERCEL || (typeof caches !== "undefined" && typeof caches === "object");
 
 const originalFetch = globalThis.fetch;
 const proxyDispatchers = new Map();
