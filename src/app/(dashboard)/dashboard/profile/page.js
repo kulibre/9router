@@ -342,8 +342,8 @@ export default function ProfilePage() {
                 <span className="material-symbols-outlined text-2xl">computer</span>
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Local Mode</h2>
-                <p className="text-text-muted">Running on your machine</p>
+                <h2 className="text-xl font-semibold">Router Management</h2>
+                <p className="text-text-muted">Cloud sync enabled</p>
               </div>
             </div>
             <div className="inline-flex p-1 rounded-lg bg-black/5 dark:bg-white/5">
@@ -370,8 +370,8 @@ export default function ProfilePage() {
           <div className="flex flex-col gap-3 pt-4 border-t border-border">
             <div className="flex items-center justify-between p-3 rounded-lg bg-bg border border-border">
               <div>
-                <p className="font-medium">Database Location</p>
-                <p className="text-sm text-text-muted font-mono">~/.9router/db.json</p>
+                <p className="font-medium">Cloud Database</p>
+                <p className="text-sm text-text-muted">Supabase Managed Instance</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -653,7 +653,7 @@ export default function ProfilePage() {
         {/* App Info */}
         <div className="text-center text-sm text-text-muted py-4">
           <p>{APP_CONFIG.name} v{APP_CONFIG.version}</p>
-          <p className="mt-1">Local Mode - All data stored on your machine</p>
+          <p className="mt-1">Managed Mode - All data stored in Cloud Database</p>
         </div>
       </div>
     </div>

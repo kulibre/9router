@@ -103,6 +103,7 @@ const PROVIDERS = {
           state: codeState || state,
           grant_type: "authorization_code",
           client_id: config.clientId,
+          ...(config.clientSecret ? { client_secret: config.clientSecret } : {}),
           redirect_uri: redirectUri,
           code_verifier: codeVerifier,
         }),
@@ -154,6 +155,7 @@ const PROVIDERS = {
         body: new URLSearchParams({
           grant_type: "authorization_code",
           client_id: config.clientId,
+          ...(config.clientSecret ? { client_secret: config.clientSecret } : {}),
           code: code,
           redirect_uri: redirectUri,
           code_verifier: codeVerifier,

@@ -9,7 +9,12 @@ const { TARGET_HOSTS, URL_PATTERNS, getToolForHost } = require("./config");
 const { DATA_DIR, MITM_DIR } = require("./paths");
 const { getCertForDomain } = require("./cert/generate");
 
-const DB_FILE = path.join(DATA_DIR, "db.json");
+const DEFAULT_LOCAL_ROUTER = "http://localhost:20128";
+const ROUTER_BASE = String(process.env.MITM_ROUTER_BASE || DEFAULT_LOCAL_ROUTER)
+  .trim()
+  .replace(/\/+$/, "") || DEFAULT_LOCAL_ROUTER;
+const API_KEY = process.env.ROUTER_API_KEY;
+
 const LOCAL_PORT = 443;
 const IS_WIN = process.platform === "win32";
 const ENABLE_FILE_LOG = false;
@@ -100,18 +105,36 @@ function extractModel(url, body) {
   } catch { return null; }
 }
 
-function getMappedModel(tool, model) {
+let aliasCache = { data: {}, ts: 0 };
+const ALIAS_CACHE_TTL = 10000; // 10s cache
+
+async function getMappedModel(tool, model) {
   if (!model) return null;
-  try {
-    if (!fs.existsSync(DB_FILE)) return null;
-    const db = JSON.parse(fs.readFileSync(DB_FILE, "utf-8"));
-    const aliases = db.mitmAlias?.[tool];
-    if (!aliases) return null;
-    if (aliases[model]) return aliases[model];
-    // Prefix match fallback
-    const prefixKey = Object.keys(aliases).find(k => k && aliases[k] && (model.startsWith(k) || k.startsWith(model)));
-    return prefixKey ? aliases[prefixKey] : null;
-  } catch { return null; }
+  
+  const now = Date.now();
+  // Fetch/Refresh aliases if cache expired
+  if (now - aliasCache.ts > ALIAS_CACHE_TTL) {
+    try {
+      const url = `${ROUTER_BASE}/api/cli-tools/antigravity-mitm/alias`;
+      const resp = await fetch(url, {
+        headers: { ...(API_KEY && { "Authorization": `Bearer ${API_KEY}` }) }
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        aliasCache = { data: json.aliases || {}, ts: now };
+      }
+    } catch (e) {
+      log(`⚠️ Failed to fetch aliases from router: ${e.message}`);
+    }
+  }
+
+  const aliases = aliasCache.data[tool];
+  if (!aliases) return null;
+  if (aliases[model]) return aliases[model];
+
+  // Prefix match fallback
+  const prefixKey = Object.keys(aliases).find(k => k && aliases[k] && (model.startsWith(k) || k.startsWith(model)));
+  return prefixKey ? aliases[prefixKey] : null;
 }
 
 function saveRequestLog(url, bodyBuffer) {
@@ -205,7 +228,7 @@ const server = https.createServer(sslOptions, async (req, res) => {
     const model = extractModel(req.url, bodyBuffer);
     log(`🔍 [${tool}] model="${model}"`);
 
-    const mappedModel = getMappedModel(tool, model);
+    const mappedModel = await getMappedModel(tool, model);
     if (!mappedModel) {
       log(`⏩ passthrough | no mapping | ${tool} | ${model || "unknown"}`);
       return passthrough(req, res, bodyBuffer);
