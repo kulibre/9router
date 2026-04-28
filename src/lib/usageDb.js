@@ -167,3 +167,39 @@ export { saveRequestDetail } from "./requestDetailsDb.js";
 export async function getUsageDb() { return { data: { history: [] }, read: async () => {}, write: async () => {} }; }
 export async function appendRequestLog() {} // Could be implemented with supabase
 export async function getRecentLogs() { return []; }
+
+export async function getChartData(period = "7d") {
+  const now = new Date();
+  const start = new Date(now);
+  if (period === "24h") start.setDate(start.getDate() - 1);
+  else if (period === "7d") start.setDate(start.getDate() - 7);
+  else if (period === "30d") start.setDate(start.getDate() - 30);
+  else if (period === "60d") start.setDate(start.getDate() - 60);
+
+  const { data, error } = await supabase
+    .from("usage_history")
+    .select("timestamp, cost, provider, model, tokens")
+    .gte("timestamp", start.toISOString())
+    .order("timestamp", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getActiveRequests() {
+  const recentHistory = await getUsageHistory({ limit: 20 });
+  return {
+    activeRequests: pendingRequests,
+    recentRequests: recentHistory.map((item) => ({
+      timestamp: item.timestamp,
+      model: item.model,
+      provider: item.provider,
+      promptTokens: item.tokens?.prompt_tokens || 0,
+      completionTokens: item.tokens?.completion_tokens || 0,
+      status: item.status || "ok",
+    })),
+    errorProvider: (Date.now() - lastErrorProvider.ts < 10000) ? lastErrorProvider.provider : "",
+  };
+}
+
+export { getRequestDetails } from "./requestDetailsDb.js";

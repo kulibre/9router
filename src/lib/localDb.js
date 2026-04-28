@@ -567,3 +567,51 @@ export async function cleanupProviderConnections() {
     console.error("[localDb] Cleanup failed:", err);
   }
 }
+
+// --- Keys compatibility ---
+export async function getApiKeyById(id) {
+  const { data, error } = await supabase.from("api_keys").select("*").eq("id", id).single();
+  if (error) return null;
+  return mapToCamelCase(data);
+}
+
+export async function updateApiKey(id, data) {
+  const snakeData = mapToSnakeCase(data);
+  const { data: updated, error } = await supabase.from("api_keys").update(snakeData).eq("id", id).select().single();
+  if (error) throw error;
+  return mapToCamelCase(updated);
+}
+
+// --- Pricing compatibility ---
+
+export async function updatePricing(pricingData) {
+  const rows = [];
+  for (const [provider, models] of Object.entries(pricingData)) {
+    for (const [model, pricing] of Object.entries(models)) {
+      rows.push({
+        provider,
+        model,
+        input: pricing.input || 0,
+        output: pricing.output || 0,
+        cached: pricing.cached || 0
+      });
+    }
+  }
+  if (rows.length > 0) {
+    await supabase.from("pricing").upsert(rows);
+  }
+  return getPricing();
+}
+
+export async function resetPricing(provider, model) {
+  let query = supabase.from("pricing").delete();
+  if (provider) query = query.eq("provider", provider);
+  if (model) query = query.eq("model", model);
+  await query;
+  return true;
+}
+
+export async function resetAllPricing() {
+  await supabase.from("pricing").delete().neq("provider", "");
+  return true;
+}
