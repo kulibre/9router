@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Card, Button } from "@/shared/components";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -10,7 +10,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export default function LoginPage() {
+function LoginContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [requireLogin, setRequireLogin] = useState(true);
@@ -98,5 +98,25 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg p-4">
+          <div className="w-full max-w-md">
+            <Card>
+              <div className="flex items-center justify-center py-8 text-text-muted">
+                Loading...
+              </div>
+            </Card>
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
