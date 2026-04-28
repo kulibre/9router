@@ -4,6 +4,23 @@ import { v4 as uuidv4 } from "uuid";
 import { mintAppJwt } from "@/lib/authUtils";
 import { supabase } from "@/lib/supabase";
 
+function getPublicOrigin(request) {
+  const envBaseUrl = process.env.BASE_URL || process.env.NEXT_PUBLIC_BASE_URL;
+  if (envBaseUrl && !envBaseUrl.includes("localhost")) {
+    return envBaseUrl.replace(/\/$/, "");
+  }
+
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto") || "https";
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 function buildErrorRedirect(origin, message) {
   return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(message)}`);
 }
@@ -95,5 +112,5 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
-  return buildErrorRedirect(new URL(request.url).origin, "Invalid login request");
+  return buildErrorRedirect(getPublicOrigin(request), "Invalid login request");
 }
