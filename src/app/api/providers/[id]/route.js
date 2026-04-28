@@ -5,6 +5,7 @@ import {
   updateProviderConnection,
   deleteProviderConnection,
 } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 
 function normalizeProxyConfig(body = {}) {
   const hasAnyProxyField =
@@ -62,8 +63,13 @@ function shouldMergeProviderSpecificData(existing, incoming, hasLegacyProxy, has
 // GET /api/providers/[id] - Get single connection
 export async function GET(request, { params }) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
-    const connection = await getProviderConnectionById(id);
+    const connection = await getProviderConnectionById(user.userId, id);
 
     if (!connection) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
@@ -86,6 +92,11 @@ export async function GET(request, { params }) {
 // PUT /api/providers/[id] - Update connection
 export async function PUT(request, { params }) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const {
@@ -101,7 +112,7 @@ export async function PUT(request, { params }) {
       providerSpecificData
     } = body;
 
-    const existing = await getProviderConnectionById(id);
+    const existing = await getProviderConnectionById(user.userId, id);
     if (!existing) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
@@ -155,7 +166,7 @@ export async function PUT(request, { params }) {
       }
     }
 
-    const updated = await updateProviderConnection(id, updateData);
+    const updated = await updateProviderConnection(user.userId, id, updateData);
 
     // Hide sensitive fields
     const result = { ...updated };
@@ -174,9 +185,14 @@ export async function PUT(request, { params }) {
 // DELETE /api/providers/[id] - Delete connection
 export async function DELETE(request, { params }) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
 
-    const deleted = await deleteProviderConnection(id);
+    const deleted = await deleteProviderConnection(user.userId, id);
     if (!deleted) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }

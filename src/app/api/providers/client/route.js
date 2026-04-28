@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { getProviderConnections } from "@/lib/localDb";
 import { backfillCodexEmails } from "@/lib/oauth/providers";
+import { getServerUser } from "@/lib/authUtils";
 
 // GET /api/providers/client - List all connections for client (includes sensitive fields for sync)
-export async function GET() {
+export async function GET(request) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await backfillCodexEmails();
-    const connections = await getProviderConnections();
+    const connections = await getProviderConnections(user.userId);
     
     // Include sensitive fields for sync to cloud (only accessible from same origin)
     const clientConnections = connections.map(c => ({

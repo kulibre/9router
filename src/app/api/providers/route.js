@@ -6,6 +6,7 @@ import {
   getProviderNodes,
   getProxyPoolById,
 } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 import { APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { FREE_TIER_PROVIDERS, WEB_COOKIE_PROVIDERS, isOpenAICompatibleProvider, isAnthropicCompatibleProvider } from "@/shared/constants/providers";
 
@@ -46,9 +47,14 @@ async function normalizeProxyPoolId(proxyPoolId) {
 }
 
 // GET /api/providers - List all connections
-export async function GET() {
+export async function GET(request) {
   try {
-    const connections = await getProviderConnections();
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const connections = await getProviderConnections(user.userId);
 
     // Build nodeNameMap for compatible providers (id → name)
     let nodeNameMap = {};
@@ -85,6 +91,11 @@ export async function GET() {
 // POST /api/providers - Create new connection (API Key only, OAuth via separate flow)
 export async function POST(request) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { provider, apiKey, name, priority, globalPriority, defaultModel, testStatus } = body;
     const proxyConfig = normalizeProxyConfig(body);
@@ -124,7 +135,7 @@ export async function POST(request) {
         return NextResponse.json({ error: "OpenAI Compatible node not found" }, { status: 404 });
       }
 
-      const existingConnections = await getProviderConnections({ provider });
+      const existingConnections = await getProviderConnections(user.userId, { provider });
       if (existingConnections.length > 0) {
         return NextResponse.json({ error: "Only one connection is allowed for this OpenAI Compatible node" }, { status: 400 });
       }
@@ -141,7 +152,7 @@ export async function POST(request) {
         return NextResponse.json({ error: "Anthropic Compatible node not found" }, { status: 404 });
       }
 
-      const existingConnections = await getProviderConnections({ provider });
+      const existingConnections = await getProviderConnections(user.userId, { provider });
       if (existingConnections.length > 0) {
         return NextResponse.json({ error: "Only one connection is allowed for this Anthropic Compatible node" }, { status: 400 });
       }
@@ -164,7 +175,7 @@ export async function POST(request) {
       mergedProviderSpecificData.proxyPoolId = proxyPoolId;
     }
 
-    const newConnection = await createProviderConnection({
+    const newConnection = await createProviderConnection(user.userId, {
       provider,
       authType: isWebCookieProvider ? "cookie" : "apikey",
       name,

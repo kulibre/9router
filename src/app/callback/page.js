@@ -2,6 +2,12 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 /**
  * OAuth Callback Page Content
@@ -9,12 +15,78 @@ import { useSearchParams } from "next/navigation";
 function CallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState("processing");
+  const [message, setMessage] = useState("Please wait while we complete the authorization.");
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-    const error = searchParams.get("error");
-    const errorDescription = searchParams.get("error_description");
+    // Parse both query params and URL fragment (Supabase returns tokens in fragment)
+    const source = searchParams.get("source");
+    let code = searchParams.get("code");
+    let state = searchParams.get("state");
+    let error = searchParams.get("error");
+    let errorDescription = searchParams.get("error_description");
+    let accessToken = null;
+
+    // Check URL fragment for access_token (implicit flow)
+    if (typeof window !== "undefined" && window.location.hash) {
+      const fragment = new URLSearchParams(window.location.hash.substring(1));
+      accessToken = fragment.get("access_token");
+      if (!error) error = fragment.get("error");
+      if (!errorDescription) errorDescription = fragment.get("error_description");
+    }
+
+    async function completeGoogleLogin() {
+      try {
+        if (error) {
+          setStatus("manual");
+          setMessage(errorDescription || error || "Authentication failed.");
+          return;
+        }
+
+        if (!code && !accessToken) {
+          setStatus("manual");
+          setMessage("Missing authorization code.");
+          return;
+        }
+
+        let finalAccessToken = accessToken;
+
+        // If we have a code but no access_token, exchange it
+        if (code && !accessToken) {
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError || !exchangeData?.session?.access_token) {
+            setStatus("manual");
+            setMessage(exchangeError?.message || "Failed to complete Google sign-in.");
+            return;
+          }
+          finalAccessToken = exchangeData.session.access_token;
+        }
+
+        const response = await fetch("/api/auth/google/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken: finalAccessToken }),
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setStatus("manual");
+          setMessage(result.error || "Failed to finish sign-in.");
+          return;
+        }
+
+        await supabase.auth.signOut();
+        window.location.replace(result.redirectTo || "/dashboard");
+      } catch (loginError) {
+        console.error("Google login callback failed", loginError);
+        setStatus("manual");
+        setMessage("Failed to finish sign-in.");
+      }
+    }
+
+    if (source === "login") {
+      completeGoogleLogin();
+      return;
+    }
 
     const callbackData = {
       code,
@@ -81,7 +153,7 @@ function CallbackContent() {
               <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
             </div>
             <h1 className="text-xl font-semibold mb-2">Processing...</h1>
-            <p className="text-text-muted">Please wait while we complete the authorization.</p>
+            <p className="text-text-muted">{message}</p>
           </>
         )}
 
@@ -104,7 +176,7 @@ function CallbackContent() {
             </div>
             <h1 className="text-xl font-semibold mb-2">Copy This URL</h1>
             <p className="text-text-muted mb-4">
-              Please copy the URL from the address bar and paste it in the application.
+              {message || "Please copy the URL from the address bar and paste it in the application."}
             </p>
             <div className="bg-surface border border-border rounded-lg p-3 text-left">
               <code className="text-xs break-all">{typeof window !== "undefined" ? window.location.href : ""}</code>

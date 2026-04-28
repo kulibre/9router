@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { 
-  getProvider, 
-  generateAuthData, 
-  exchangeTokens, 
-  requestDeviceCode, 
-  pollForToken 
+import {
+  getProvider,
+  generateAuthData,
+  exchangeTokens,
+  requestDeviceCode,
+  pollForToken
 } from "@/lib/oauth/providers";
 import { createProviderConnection } from "@/models";
 import { startCodexProxy, stopCodexProxy } from "@/lib/oauth/utils/server";
+import { getServerUser } from "@/lib/authUtils";
 
 /**
  * Dynamic OAuth API Route
@@ -96,6 +97,11 @@ export async function GET(request, { params }) {
 // POST /api/oauth/[provider]/poll - Poll for token (device_code flow)
 export async function POST(request, { params }) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { provider, action } = await params;
     let body;
     try {
@@ -117,12 +123,12 @@ export async function POST(request, { params }) {
       const tokenData = await exchangeTokens(provider, code, redirectUri, codeVerifier, state, meta);
 
       // Save to database
-      const connection = await createProviderConnection({
+      const connection = await createProviderConnection(user.userId, {
         provider,
         authType: "oauth",
         ...tokenData,
-        expiresAt: tokenData.expiresIn 
-          ? new Date(Date.now() + tokenData.expiresIn * 1000).toISOString() 
+        expiresAt: tokenData.expiresIn
+          ? new Date(Date.now() + tokenData.expiresIn * 1000).toISOString()
           : null,
         testStatus: "active",
       });
@@ -163,12 +169,12 @@ export async function POST(request, { params }) {
 
       if (result.success) {
         // Save to database
-        const connection = await createProviderConnection({
+        const connection = await createProviderConnection(user.userId, {
           provider,
           authType: "oauth",
           ...result.tokens,
-          expiresAt: result.tokens.expiresIn 
-            ? new Date(Date.now() + result.tokens.expiresIn * 1000).toISOString() 
+          expiresAt: result.tokens.expiresIn
+            ? new Date(Date.now() + result.tokens.expiresIn * 1000).toISOString()
             : null,
           testStatus: "active",
         });

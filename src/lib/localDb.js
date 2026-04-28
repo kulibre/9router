@@ -50,7 +50,7 @@ function mapToCamelCase(obj) {
 }
 
 const CONNECTION_COLUMNS = [
-  "id", "provider", "auth_type", "name", "priority", "is_active",
+  "id", "user_id", "provider", "auth_type", "name", "priority", "is_active",
   "display_name", "email", "access_token", "refresh_token",
   "expires_at", "api_key", "id_token", "scope", "token_type", "test_status",
   "created_at", "updated_at"
@@ -88,22 +88,24 @@ function mapConnectionFromDb(obj) {
 
 // --- Cache Logic ---
 let cache = {
-  connections: { data: null, ts: 0 },
+  connectionsByUser: new Map(),
   settings: { data: null, ts: 0 }
 };
 const CACHE_TTL = 2000; // 2 seconds
 
 // --- Provider Connections ---
-export async function getProviderConnections(filter = {}) {
+export async function getProviderConnections(userId, filter = {}) {
   const now = Date.now();
-  const useCache = !filter.provider && filter.isActive === undefined;
+  const useCache = !!userId && !filter.provider && filter.isActive === undefined;
+  const cached = useCache ? cache.connectionsByUser.get(userId) : null;
 
-  if (useCache && cache.connections.data && (now - cache.connections.ts) < CACHE_TTL) {
-    return cache.connections.data;
+  if (cached && (now - cached.ts) < CACHE_TTL) {
+    return cached.data;
   }
 
   let query = supabase.from("provider_connections").select("*");
 
+  if (userId) query = query.eq("user_id", userId);
   if (filter.provider) query = query.eq("provider", filter.provider);
   if (filter.isActive !== undefined) query = query.eq("is_active", filter.isActive);
 
@@ -112,22 +114,24 @@ export async function getProviderConnections(filter = {}) {
 
   const result = data.map(mapConnectionFromDb);
   if (useCache) {
-    cache.connections.data = result;
-    cache.connections.ts = now;
+    cache.connectionsByUser.set(userId, { data: result, ts: now });
   }
   return result;
 }
 
-export async function getProviderConnectionById(id) {
-  const { data, error } = await supabase.from("provider_connections").select("*").eq("id", id).single();
+export async function getProviderConnectionById(userId, id) {
+  let query = supabase.from("provider_connections").select("*").eq("id", id);
+  if (userId) query = query.eq("user_id", userId);
+  const { data, error } = await query.single();
   if (error) return null;
   return mapConnectionFromDb(data);
 }
 
-export async function createProviderConnection(data) {
+export async function createProviderConnection(userId, data) {
   const id = data.id || uuidv4();
-  const dbData = prepareConnectionForDb({ ...data, id });
-  
+  const dbData = prepareConnectionForDb({ ...data, id, userId });
+  dbData.user_id = userId;
+
   const { data: inserted, error } = await supabase
     .from("provider_connections")
     .upsert(dbData, { onConflict: "id" })
@@ -138,19 +142,20 @@ export async function createProviderConnection(data) {
     console.error("[localDb] createProviderConnection error:", error);
     throw error;
   }
-  
-  // Clear cache
-  cache.connections.data = null;
-  
+
+  if (userId) cache.connectionsByUser.delete(userId);
+
   return mapConnectionFromDb(inserted);
 }
 
-export async function updateProviderConnection(id, data) {
+export async function updateProviderConnection(userId, id, data) {
   const dbData = prepareConnectionForDb(data);
-  const { data: updated, error } = await supabase
+  let query = supabase
     .from("provider_connections")
     .update(dbData)
-    .eq("id", id)
+    .eq("id", id);
+  if (userId) query = query.eq("user_id", userId);
+  const { data: updated, error } = await query
     .select()
     .single();
 
@@ -158,20 +163,25 @@ export async function updateProviderConnection(id, data) {
     console.error("[localDb] updateProviderConnection error:", error);
     throw error;
   }
-  
-  // Clear cache
-  cache.connections.data = null;
-  
+
+  if (userId) cache.connectionsByUser.delete(userId);
+
   return mapConnectionFromDb(updated);
 }
 
-export async function deleteProviderConnection(id) {
-  const { error } = await supabase.from("provider_connections").delete().eq("id", id);
+export async function deleteProviderConnection(userId, id) {
+  let query = supabase.from("provider_connections").delete().eq("id", id);
+  if (userId) query = query.eq("user_id", userId);
+  const { error } = await query;
+  if (userId) cache.connectionsByUser.delete(userId);
   return !error;
 }
 
-export async function deleteProviderConnectionsByProvider(provider) {
-  const { error } = await supabase.from("provider_connections").delete().eq("provider", provider);
+export async function deleteProviderConnectionsByProvider(userId, provider) {
+  let query = supabase.from("provider_connections").delete().eq("provider", provider);
+  if (userId) query = query.eq("user_id", userId);
+  const { error } = await query;
+  if (userId) cache.connectionsByUser.delete(userId);
   return !error;
 }
 

@@ -40,8 +40,8 @@ async function hasValidToken(request) {
   const token = request.cookies.get("auth_token")?.value;
   if (!token) return false;
   try {
-    await jwtVerify(token, SECRET);
-    return true;
+    const { payload } = await jwtVerify(token, SECRET);
+    return !!payload?.userId;
   } catch {
     return false;
   }
