@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createProviderConnection } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 
 const GITLAB_DEFAULT_BASE = "https://gitlab.com";
 
@@ -9,6 +10,11 @@ const GITLAB_DEFAULT_BASE = "https://gitlab.com";
  */
 export async function POST(request) {
   try {
+    const authUser = await getServerUser(request);
+    if (!authUser || !authUser.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     let body;
     try {
       body = await request.json();
@@ -33,22 +39,22 @@ export async function POST(request) {
       return NextResponse.json({ error: `GitLab token verification failed: ${err}` }, { status: 401 });
     }
 
-    const user = await userRes.json();
-    const email = user.email || user.public_email || "";
+    const gitlabUser = await userRes.json();
+    const email = gitlabUser.email || gitlabUser.public_email || "";
 
-    await createProviderConnection({
+    await createProviderConnection(authUser.userId, {
       provider: "gitlab",
       authType: "oauth",
       accessToken: token.trim(),
       refreshToken: null,
       expiresAt: null,
       email,
-      displayName: user.name || user.username || email,
+      displayName: gitlabUser.name || gitlabUser.username || email,
       testStatus: "active",
       providerSpecificData: {
-        username: user.username || "",
+        username: gitlabUser.username || "",
         email,
-        name: user.name || "",
+        name: gitlabUser.name || "",
         baseUrl: base,
         authKind: "personal_access_token",
       },
