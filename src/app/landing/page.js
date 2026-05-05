@@ -1,15 +1,16 @@
 "use client";
 import { useRouter } from "next/navigation";
-import Navigation from "./components/Navigation";
-import HeroSection from "./components/HeroSection";
-import FlowAnimation from "./components/FlowAnimation";
-import HowItWorks from "./components/HowItWorks";
-import Features from "./components/Features";
-import GetStarted from "./components/GetStarted";
+import { motion } from "framer-motion";
+import Navigation3D from "./components/Navigation3D";
+import Hero3D from "./components/Hero3D";
+import Flow3D from "./components/Flow3D";
+import HowItWorks3D from "./components/HowItWorks3D";
+import Features3D from "./components/Features3D";
 import Footer from "./components/Footer";
 
-export default function LandingPage() {
+export default function LandingPage3D() {
   const router = useRouter();
+  
   return (
     <div className="relative text-white font-sans overflow-x-hidden antialiased selection:bg-[#f97815] selection:text-white">
       {/* Animated Background */}
@@ -21,9 +22,61 @@ export default function LandingPage() {
         }}></div>
         
         {/* Animated gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-[#f97815]/12 rounded-full blur-[130px] animate-blob"></div>
-        <div className="absolute top-1/3 right-1/4 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[130px] animate-blob" style={{ animationDelay: '2s', animationDuration: '22s' }}></div>
-        <div className="absolute bottom-0 left-1/2 w-[650px] h-[650px] bg-blue-500/8 rounded-full blur-[130px] animate-blob" style={{ animationDelay: '4s', animationDuration: '25s' }}></div>
+        <motion.div 
+          className="absolute top-0 left-1/4 w-[700px] h-[700px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(249, 120, 21, 0.12) 0%, transparent 70%)',
+            filter: 'blur(130px)',
+          }}
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -50, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        <motion.div 
+          className="absolute top-1/3 right-1/4 w-[600px] h-[600px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%)',
+            filter: 'blur(130px)',
+          }}
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 60, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 22,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
+        
+        <motion.div 
+          className="absolute bottom-0 left-1/2 w-[650px] h-[650px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%)',
+            filter: 'blur(130px)',
+          }}
+          animate={{
+            x: [0, 50, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 4
+          }}
+        />
         
         {/* Vignette effect */}
         <div className="absolute inset-0" style={{
@@ -32,75 +85,96 @@ export default function LandingPage() {
       </div>
 
       <div className="relative z-10">
-        <Navigation />
+        <Navigation3D />
         
         <main>
           {/* Hero with Flow Animation */}
-          <div className="relative">
-          <HeroSection />
-          <div className="flex justify-center pb-20">
-            <FlowAnimation />
-          </div>
-        </div>
-        
-        <GetStarted />
-        <HowItWorks />
-        <Features />
-        
-        {/* CTA Section */}
-        <section className="py-32 px-6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-t from-[#f97815]/5 to-transparent pointer-events-none"></div>
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h2 className="text-4xl md:text-5xl font-black mb-6">Ready to Simplify Your AI Infrastructure?</h2>
-            <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-              Join developers who are streamlining their AI integrations with 9Router. Open source and free to start.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button 
-                onClick={() => router.push("/dashboard")}
-                className="w-full sm:w-auto h-14 px-10 rounded-lg bg-[#f97815] hover:bg-[#e0650a] text-[#181411] text-lg font-bold transition-all shadow-[0_0_20px_rgba(249,120,21,0.5)]"
+          <Hero3D />
+          
+          {/* Flow Diagram */}
+          <section className="py-20 px-6">
+            <Flow3D />
+          </section>
+          
+          {/* How It Works */}
+          <HowItWorks3D />
+          
+          {/* Features */}
+          <Features3D />
+          
+          {/* CTA Section */}
+          <section className="py-32 px-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#f97815]/5 to-transparent pointer-events-none"></div>
+            
+            <div className="max-w-4xl mx-auto text-center relative z-10">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
               >
-                Start Free
-              </button>
-              <button 
-                onClick={() => window.open("https://github.com/decolua/9router#readme", "_blank")}
-                className="w-full sm:w-auto h-14 px-10 rounded-lg border border-[#3a2f27] hover:bg-[#23180f] text-white text-lg font-bold transition-all"
-              >
-                Read Documentation
-              </button>
+                <motion.h2 
+                  className="text-5xl md:text-6xl font-black mb-6"
+                  style={{
+                    background: 'linear-gradient(to right, #ffffff, #f97815)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Ready to Simplify Your AI Infrastructure?
+                </motion.h2>
+                
+                <motion.p 
+                  className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Join developers who are streamlining their AI integrations with 9Router. Open source and free to start.
+                </motion.p>
+                
+                <motion.div 
+                  className="flex flex-col sm:flex-row items-center justify-center gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.button 
+                    onClick={() => router.push("/dashboard")}
+                    className="w-full sm:w-auto h-14 px-10 rounded-xl bg-gradient-to-r from-[#f97815] to-[#ff8c3a] text-[#181411] text-lg font-bold flex items-center justify-center gap-2"
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: '0 0 40px rgba(249, 120, 21, 0.6)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span className="material-symbols-outlined">rocket_launch</span>
+                    Start Free
+                  </motion.button>
+                  
+                  <motion.button 
+                    onClick={() => window.open("https://github.com/decolua/9router#readme", "_blank")}
+                    className="w-full sm:w-auto h-14 px-10 rounded-xl border-2 border-[#3a2f27] bg-[#23180f]/80 backdrop-blur-sm text-white text-lg font-bold flex items-center justify-center gap-2"
+                    whileHover={{ 
+                      scale: 1.05,
+                      borderColor: '#f97815',
+                      boxShadow: '0 0 20px rgba(249, 120, 21, 0.3)'
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span className="material-symbols-outlined">description</span>
+                    Read Documentation
+                  </motion.button>
+                </motion.div>
+              </motion.div>
             </div>
-          </div>
-        </section>
+          </section>
         </main>
         
         <Footer />
       </div>
-      
-      {/* Global styles for keyframes */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes dash {
-          to { stroke-dashoffset: -20; }
-        }
-        @keyframes blob {
-          0%, 100% { 
-            transform: translate(0, 0) scale(1);
-          }
-          33% { 
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% { 
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-        }
-        .animate-blob {
-          animation: blob 20s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
-

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>9Router Animation Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@11';
+
+    // Test animations
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('Framer Motion loaded successfully');
+
+      // Test 1: Button tap animation
+      const button = document.getElementById('test-button');
+      button.addEventListener('click', () => {
+        button.style.transform = 'scale(0.97)';
+        setTimeout(() => {
+          button.style.transform = 'scale(1)';
+        }, 150);
+      });
+
+      // Test 2: Toast notification
+      const showToast = document.getElementById('show-toast');
+      const toastContainer = document.getElementById('toast-container');
+      showToast.addEventListener('click', () => {
+        const toast = document.createElement('div');
+        toast.className = 'bg-green-500/10 border border-green-500/30 text-green-600 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm';
+        toast.innerHTML = '<div class="flex items-center gap-2"><span>✓</span><span>Animation working!</span></div>';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px) scale(0.9)';
+        toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateX(0) scale(1)';
+        }, 10);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(100px) scale(0.9)';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      });
+
+      // Test 3: Modal animation
+      const showModal = document.getElementById('show-modal');
+      const modal = document.getElementById('modal');
+      const closeModal = document.getElementById('close-modal');
+      const modalOverlay = document.getElementById('modal-overlay');
+      const modalContent = document.getElementById('modal-content');
+
+      showModal.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          modalOverlay.style.opacity = '1';
+          modalContent.style.opacity = '1';
+          modalContent.style.transform = 'scale(1) translateY(0)';
+        }, 10);
+      });
+
+      const hideModal = () => {
+        modalOverlay.style.opacity = '0';
+        modalContent.style.opacity = '0';
+        modalContent.style.transform = 'scale(0.95) translateY(20px)';
+        setTimeout(() => modal.classList.add('hidden'), 250);
+      };
+
+      closeModal.addEventListener('click', hideModal);
+      modalOverlay.addEventListener('click', hideModal);
+
+      // Test 4: Stagger animation
+      const showStagger = document.getElementById('show-stagger');
+      const staggerContainer = document.getElementById('stagger-container');
+
+      showStagger.addEventListener('click', () => {
+        staggerContainer.innerHTML = '';
+        const items = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'];
+
+        items.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm';
+          div.textContent = item;
+          div.style.opacity = '0';
+          div.style.transform = 'translateY(8px)';
+          div.style.transition = 'all 0.2s ease-out';
+
+          staggerContainer.appendChild(div);
+
+          setTimeout(() => {
+            div.style.opacity = '1';
+            div.style.transform = 'translateY(0)';
+          }, index * 50);
+        });
+      });
+
+      // Test 5: Toggle animation
+      const toggle = document.getElementById('toggle');
+      const toggleThumb = document.getElementById('toggle-thumb');
+      let isChecked = false;
+
+      toggle.addEventListener('click', () => {
+        isChecked = !isChecked;
+        toggle.style.backgroundColor = isChecked ? '#D97757' : 'rgba(0,0,0,0.1)';
+        toggleThumb.style.transform = isChecked ? 'translateX(20px)' : 'translateX(0)';
+      });
+    });
+  </script>
+  <style>
+    body {
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .transition-spring {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">9Router Animation Test</h1>
+    <p class="text-gray-600 mb-8">Testing Framer Motion animations without authentication</p>
+
+    <!-- Test 1: Button Tap -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-3">1. Button Tap Animation</h2>
+      <button
+        id="test-button"
+        class="bg-gradient-to-b from-[#D97757] to-[#c96847] text-white px-4 py-2 rounded-lg shadow-sm transition-spring hover:shadow-md"
+      >
+        Click Me (Scale 0.97)
+      </button>
+    </div>
+
+    <!-- Test 2: Toast Notification -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-3">2. Toast Notification (Slide from Right)</h2>
+      <button
+        id="show-toast"
+        class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-sm transition-spring hover:shadow-md"
+      >
+        Show Toast
+      </button>
+    </div>
+
+    <!-- Test 3: Modal -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-3">3. Modal Animation (Scale + Fade)</h2>
+      <button
+        id="show-modal"
+        class="bg-purple-500 text-white px-4 py-2 rounded-lg shadow-sm transition-spring hover:shadow-md"
+      >
+        Show Modal
+      </button>
+    </div>
+
+    <!-- Test 4: Stagger -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-3">4. Stagger Animation (50ms delay)</h2>
+      <button
+        id="show-stagger"
+        class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-sm transition-spring hover:shadow-md mb-4"
+      >
+        Animate List
+      </button>
+      <div id="stagger-container" class="flex flex-col gap-2"></div>
+    </div>
+
+    <!-- Test 5: Toggle -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-3">5. Toggle Spring Physics</h2>
+      <button
+        id="toggle"
+        class="relative inline-flex w-11 h-6 rounded-full transition-spring"
+        style="background-color: rgba(0,0,0,0.1)"
+      >
+        <span
+          id="toggle-thumb"
+          class="inline-block w-5 h-5 rounded-full bg-white shadow-sm mt-0.5 ml-0.5 transition-spring"
+          style="transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        ></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-80"></div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden">
+    <div
+      id="modal-overlay"
+      class="absolute inset-0 bg-black/30 backdrop-blur-sm transition-spring"
+      style="opacity: 0"
+    ></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div
+        id="modal-content"
+        class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full transition-spring"
+        style="opacity: 0; transform: scale(0.95) translateY(20px)"
+      >
+        <h3 class="text-xl font-semibold mb-2">Modal Title</h3>
+        <p class="text-gray-600 mb-4">This modal animates with scale and fade effects, matching the Framer Motion implementation.</p>
+        <button
+          id="close-modal"
+          class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg transition-spring hover:bg-gray-300"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

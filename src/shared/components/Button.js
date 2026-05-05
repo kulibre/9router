@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 
 const variants = {
@@ -29,10 +30,12 @@ export default function Button({
   ...props
 }) {
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={cn(
         "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 cursor-pointer",
-        "active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
+        "disabled:opacity-50 disabled:cursor-not-allowed",
         variants[variant],
         sizes[size],
         fullWidth && "w-full",
@@ -50,7 +53,7 @@ export default function Button({
       {iconRight && !loading && (
         <span className="material-symbols-outlined text-[18px]">{iconRight}</span>
       )}
-    </button>
+    </motion.button>
   );
 }
 

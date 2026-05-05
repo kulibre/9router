@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
+import { modalVariants, withReducedMotion } from "@/shared/utils/animations";
 import Button from "./Button";
 
 export default function Modal({
@@ -46,64 +48,70 @@ export default function Modal({
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={closeOnOverlay ? onClose : undefined}
-      />
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={closeOnOverlay ? onClose : undefined}
+          />
 
-      {/* Modal content */}
-      <div
-        className={cn(
-          "relative w-full bg-surface",
-          "border border-black/10 dark:border-white/10",
-          "rounded-xl shadow-2xl",
-          "animate-in fade-in zoom-in-95 duration-200",
-          sizes[size],
-          className
-        )}
-      >
-        {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-2 border-b border-black/5 dark:border-white/5">
-            <div className="flex items-center">
-              <div className="flex items-center gap-2 mr-4">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-                <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
-              </div>
-              {title && (
-                <h2 className="text-lg font-semibold text-text-main">
-                  {title}
-                </h2>
-              )}
-            </div>
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-text-muted hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
+          {/* Modal content */}
+          <motion.div
+            {...withReducedMotion(modalVariants)}
+            className={cn(
+              "relative w-full bg-surface",
+              "border border-black/10 dark:border-white/10",
+              "rounded-xl shadow-2xl",
+              sizes[size],
+              className
             )}
-          </div>
-        )}
+          >
+            {/* Header */}
+            {(title || showCloseButton) && (
+              <div className="flex items-center justify-between p-2 border-b border-black/5 dark:border-white/5">
+                <div className="flex items-center">
+                  <div className="flex items-center gap-2 mr-4">
+                    <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
+                    <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                    <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
+                  </div>
+                  {title && (
+                    <h2 className="text-lg font-semibold text-text-main">
+                      {title}
+                    </h2>
+                  )}
+                </div>
+                {showCloseButton && (
+                  <button
+                    onClick={onClose}
+                    className="p-1.5 rounded-lg text-text-muted hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                )}
+              </div>
+            )}
 
-        {/* Body */}
-        <div className="p-6 max-h-[calc(85vh-100px)] overflow-y-auto">{children}</div>
+            {/* Body */}
+            <div className="p-6 max-h-[calc(85vh-100px)] overflow-y-auto">{children}</div>
 
-        {/* Footer */}
-        {footer && (
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-black/5 dark:border-white/5">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
+            {/* Footer */}
+            {footer && (
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-black/5 dark:border-white/5">
+                {footer}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 

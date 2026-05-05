@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, Button, Input, Modal, CardSkeleton, Toggle } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import { staggerContainer, staggerItem } from "@/shared/utils/animations";
 
 const TUNNEL_BENEFITS = [
   { icon: "public", title: "Access Anywhere", desc: "Use your API from any network" },
@@ -632,29 +634,39 @@ export default function APIPageClient({ machineId }) {
         <h2 className="text-lg font-semibold mb-4">API Endpoint</h2>
 
         {/* Endpoint rows */}
-        <div className="flex flex-col gap-2">
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          className="flex flex-col gap-2"
+        >
           {/* Local */}
-          <EndpointRow
-            label="Local"
-            url={currentEndpoint}
-            copyId="local_url"
-            copied={copied}
-            onCopy={copy}
-          />
+          <motion.div variants={staggerItem}>
+            <EndpointRow
+              label="Local"
+              url={currentEndpoint}
+              copyId="local_url"
+              copied={copied}
+              onCopy={copy}
+            />
+          </motion.div>
           {/* Cloudflare Tunnel */}
-          <div className="flex items-center gap-2">
+          <motion.div variants={staggerItem} className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[68px] text-center ${
               tunnelEnabled ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" : "bg-sidebar text-text-muted"
             }`}>Tunnel</span>
             {tunnelEnabled && !tunnelLoading ? (
               <>
                 <Input value={`${tunnelPublicUrl || tunnelUrl}/v1`} readOnly className="flex-1 font-mono text-sm" />
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  animate={copied === "tunnel_url" ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
                   onClick={() => copy(`${tunnelPublicUrl || tunnelUrl}/v1`, "tunnel_url")}
                   className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-colors shrink-0"
                 >
                   <span className="material-symbols-outlined text-[18px]">{copied === "tunnel_url" ? "check" : "content_copy"}</span>
-                </button>
+                </motion.button>
                 <button
                   onClick={() => setShowDisableTunnelModal(true)}
                   className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors shrink-0"
@@ -665,10 +677,15 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : tunnelLoading ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-input text-sm text-text-muted">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-input text-sm text-text-muted"
+                >
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   {tunnelProgress || "Creating tunnel..."}
-                </div>
+                </motion.div>
                 <button
                   onClick={() => { setTunnelLoading(false); setTunnelProgress(""); }}
                   className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors shrink-0"
@@ -715,21 +732,24 @@ export default function APIPageClient({ machineId }) {
                 Enable
               </Button>
             )}
-          </div>
+          </motion.div>
           {/* Tailscale */}
-          <div className="flex items-center gap-2">
+          <motion.div variants={staggerItem} className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[68px] text-center ${
               tsEnabled ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" : "bg-sidebar text-text-muted"
             }`}>Tailscale</span>
             {tsEnabled && !tsLoading ? (
               <>
                 <Input value={`${tsUrl}/v1`} readOnly className="flex-1 font-mono text-sm" />
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  animate={copied === "ts_url" ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
                   onClick={() => copy(`${tsUrl}/v1`, "ts_url")}
                   className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-colors shrink-0"
                 >
                   <span className="material-symbols-outlined text-[18px]">{copied === "ts_url" ? "check" : "content_copy"}</span>
-                </button>
+                </motion.button>
                 <button
                   onClick={() => setShowDisableTsModal(true)}
                   className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors shrink-0"
@@ -740,10 +760,15 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : (tsLoading || tsConnecting) ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-input text-sm text-text-muted">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-input text-sm text-text-muted"
+                >
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   {tsProgress || "Connecting..."}
-                </div>
+                </motion.div>
                 <button
                   onClick={() => { setTsLoading(false); setTsConnecting(false); setTsProgress(""); }}
                   className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors shrink-0"
@@ -770,12 +795,19 @@ export default function APIPageClient({ machineId }) {
                 Enable
               </Button>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Security warnings when tunnel or tailscale is active */}
-        {(tunnelEnabled || tsEnabled) && (
-          <div className="mt-4 flex flex-col gap-2">
+        <AnimatePresence>
+          {(tunnelEnabled || tsEnabled) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="mt-4 flex flex-col gap-2"
+            >
             {!requireApiKey && (
               <SecurityWarning
                 message="Require API key is disabled — your endpoint is publicly accessible without authentication."
@@ -795,8 +827,9 @@ export default function APIPageClient({ machineId }) {
                 }}
               />
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {/* Tunnel dashboard access option */}
         {(tunnelEnabled || tsEnabled) && (
@@ -872,7 +905,12 @@ export default function APIPageClient({ machineId }) {
         </div>
 
         {keys.length === 0 ? (
-          <div className="text-center py-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="text-center py-12"
+          >
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
               <span className="material-symbols-outlined text-[32px]">vpn_key</span>
             </div>
@@ -881,12 +919,19 @@ export default function APIPageClient({ machineId }) {
             <Button icon="add" onClick={() => setShowAddModal(true)}>
               Create Key
             </Button>
-          </div>
+          </motion.div>
         ) : (
-          <div className="flex flex-col">
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className="flex flex-col"
+          >
             {keys.map((key) => (
-              <div
+              <motion.div
                 key={key.id}
+                variants={staggerItem}
+                layout
                 className={`group flex items-center justify-between py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0 ${key.isActive === false ? "opacity-60" : ""}`}
               >
                 <div className="flex-1 min-w-0">
@@ -904,14 +949,17 @@ export default function APIPageClient({ machineId }) {
                         {visibleKeys.has(key.id) ? "visibility_off" : "visibility"}
                       </span>
                     </button>
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      animate={copied === key.id ? { scale: [1, 1.1, 1] } : {}}
+                      transition={{ duration: 0.3 }}
                       onClick={() => copy(key.key, key.id)}
                       className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
                     >
                       <span className="material-symbols-outlined text-[14px]">
                         {copied === key.id ? "check" : "content_copy"}
                       </span>
-                    </button>
+                    </motion.button>
                   </div>
                   <p className="text-xs text-text-muted mt-1">
                     Created {new Date(key.createdAt).toLocaleDateString()}
@@ -942,9 +990,9 @@ export default function APIPageClient({ machineId }) {
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </Card>
 
@@ -1188,12 +1236,15 @@ function EndpointRow({ label, url, copyId, copied, onCopy, badge, actions }) {
             "bg-sidebar text-text-muted"
         }`}>{label}</span>
       <Input value={url} readOnly className="flex-1 font-mono text-sm" />
-      <button
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        animate={copied === copyId ? { scale: [1, 1.1, 1] } : {}}
+        transition={{ duration: 0.3 }}
         onClick={() => onCopy(url, copyId)}
         className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded text-text-muted hover:text-primary transition-colors shrink-0"
       >
         <span className="material-symbols-outlined text-[18px]">{copied === copyId ? "check" : "content_copy"}</span>
-      </button>
+      </motion.button>
       {actions}
     </div>
   );

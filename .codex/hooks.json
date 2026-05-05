@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/save-session.sh",
+            "statusMessage": "Saving session memory to Obsidian..."
+          }
+        ]
+      }
+    ]
+  }
+}

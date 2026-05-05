@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 
 export default function Toggle({
@@ -16,16 +17,19 @@ export default function Toggle({
       track: "w-8 h-4",
       thumb: "size-3",
       translate: "translate-x-4",
+      translateValue: 16, // 4 * 4px = 16px
     },
     md: {
       track: "w-11 h-6",
       thumb: "size-5",
       translate: "translate-x-5",
+      translateValue: 20, // 5 * 4px = 20px
     },
     lg: {
       track: "w-14 h-7",
       thumb: "size-6",
       translate: "translate-x-7",
+      translateValue: 28, // 7 * 4px = 28px
     },
   };
 
@@ -60,11 +64,11 @@ export default function Toggle({
           disabled && "cursor-not-allowed"
         )}
       >
-        <span
+        <motion.span
+          animate={{ x: checked ? sizes[size].translateValue : 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
           className={cn(
             "pointer-events-none inline-block rounded-full bg-white shadow-sm",
-            "transform transition duration-200 ease-in-out",
-            checked ? sizes[size].translate : "translate-x-0.5",
             sizes[size].thumb,
             "mt-0.5"
           )}

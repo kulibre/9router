@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNotificationStore } from "@/store/notificationStore";
 import Sidebar from "../Sidebar";
 import Header from "../Header";
@@ -40,33 +41,40 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-bg">
       <div className="fixed top-4 right-4 z-[80] flex w-[min(92vw,380px)] flex-col gap-2">
-        {notifications.map((n) => {
-          const style = getToastStyle(n.type);
-          return (
-            <div
-              key={n.id}
-              className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}
-            >
-              <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-[18px] leading-5">{style.icon}</span>
-                <div className="min-w-0 flex-1">
-                  {n.title ? <p className="text-xs font-semibold mb-0.5">{n.title}</p> : null}
-                  <p className="text-xs whitespace-pre-wrap break-words">{n.message}</p>
+        <AnimatePresence mode="popLayout">
+          {notifications.map((n) => {
+            const style = getToastStyle(n.type);
+            return (
+              <motion.div
+                key={n.id}
+                initial={{ opacity: 0, x: 100, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 100, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                layout
+                className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-[18px] leading-5">{style.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    {n.title ? <p className="text-xs font-semibold mb-0.5">{n.title}</p> : null}
+                    <p className="text-xs whitespace-pre-wrap break-words">{n.message}</p>
+                  </div>
+                  {n.dismissible ? (
+                    <button
+                      type="button"
+                      onClick={() => removeNotification(n.id)}
+                      className="text-current/70 hover:text-current"
+                      aria-label="Dismiss notification"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  ) : null}
                 </div>
-                {n.dismissible ? (
-                  <button
-                    type="button"
-                    onClick={() => removeNotification(n.id)}
-                    className="text-current/70 hover:text-current"
-                    aria-label="Dismiss notification"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
@@ -94,7 +102,16 @@ export default function DashboardLayout({ children }) {
       <main className="flex flex-col flex-1 h-full min-w-0 relative transition-colors duration-300">
         <Header key={pathname} onMenuClick={() => setSidebarOpen(true)} />
         <div className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-6 lg:p-10"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}>
-          <div className={`${pathname === "/dashboard/basic-chat" ? "flex-1 w-full h-full flex flex-col" : "max-w-7xl mx-auto"}`}>{children}</div>
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className={`${pathname === "/dashboard/basic-chat" ? "flex-1 w-full h-full flex flex-col" : "max-w-7xl mx-auto"}`}
+          >
+            {children}
+          </motion.div>
         </div>
       </main>
     </div>

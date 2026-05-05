@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 
 export default function Card({
@@ -21,13 +22,20 @@ export default function Card({
     lg: "p-8",
   };
 
+  const Component = hover ? motion.div : "div";
+  const motionProps = hover ? {
+    whileHover: { y: -2, boxShadow: "var(--shadow-elevated)" },
+    transition: { duration: 0.2 }
+  } : {};
+
   return (
-    <div
+    <Component
+      {...motionProps}
       className={cn(
         "bg-surface",
         "border border-black/5 dark:border-white/5",
         "rounded-lg shadow-sm",
-        hover && "hover:shadow-md hover:border-primary/30 transition-all cursor-pointer",
+        hover && "cursor-pointer",
         paddings[padding],
         className
       )}
@@ -54,7 +62,7 @@ export default function Card({
         </div>
       )}
       {children}
-    </div>
+    </Component>
   );
 }
 
