@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { KiroService } from "@/lib/oauth/services/kiro";
 import { createProviderConnection } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 
 /**
  * POST /api/oauth/kiro/social-exchange
@@ -9,6 +10,11 @@ import { createProviderConnection } from "@/models";
  */
 export async function POST(request) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { code, codeVerifier, provider } = await request.json();
 
     if (!code || !codeVerifier) {
@@ -37,7 +43,7 @@ export async function POST(request) {
     const email = kiroService.extractEmailFromJWT(tokenData.accessToken);
 
     // Save to database
-    const connection = await createProviderConnection({
+    const connection = await createProviderConnection(user.userId, {
       provider: "kiro",
       authType: "oauth",
       accessToken: tokenData.accessToken,

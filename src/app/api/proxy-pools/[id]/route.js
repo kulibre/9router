@@ -101,7 +101,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Proxy pool not found" }, { status: 404 });
     }
 
-    const connections = await getProviderConnections();
+    const connections = await getProviderConnections(null);
     const boundConnectionCount = countBoundConnections(connections, id);
 
     if (boundConnectionCount > 0) {

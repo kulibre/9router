@@ -89,7 +89,7 @@ export async function GET() {
     // Get active provider connections
     let connections = [];
     try {
-      connections = await getProviderConnections();
+      connections = await getProviderConnections(null);
       // Filter to only active connections
       connections = connections.filter(c => c.isActive !== false);
     } catch (e) {

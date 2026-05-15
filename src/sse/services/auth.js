@@ -36,7 +36,9 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       return { id: "noauth", connectionName: "Public", isActive: true, accessToken: "public" };
     }
 
-    const connections = await getProviderConnections({ provider: providerId, isActive: true });
+    // Service-layer calls: pass null userId to bypass per-user RLS
+    // (RLS "Enable all for all" is permissive; null = no user filter)
+    const connections = await getProviderConnections(null, { provider: providerId, isActive: true });
     log.debug("AUTH", `${provider} | total connections: ${connections.length}, excludeIds: ${excludeSet.size > 0 ? [...excludeSet].join(",") : "none"}, model: ${model || "any"}`);
 
     if (connections.length === 0) {
@@ -105,7 +107,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
         // Stay with current account
         connection = current;
         // Update lastUsedAt and increment count (await to ensure persistence)
-        await updateProviderConnection(connection.id, {
+        await updateProviderConnection(null, connection.id, {
           lastUsedAt: new Date().toISOString(),
           consecutiveUseCount: (connection.consecutiveUseCount || 0) + 1
         });
@@ -121,7 +123,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
         connection = sortedByOldest[0];
 
         // Update lastUsedAt and reset count to 1 (await to ensure persistence)
-        await updateProviderConnection(connection.id, {
+        await updateProviderConnection(null, connection.id, {
           lastUsedAt: new Date().toISOString(),
           consecutiveUseCount: 1
         });
@@ -172,7 +174,7 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
  */
 export async function markAccountUnavailable(connectionId, status, errorText, provider = null, model = null, resetsAtMs = null) {
   if (!connectionId || connectionId === "noauth") return { shouldFallback: false, cooldownMs: 0 };
-  const connections = await getProviderConnections({ provider });
+  const connections = await getProviderConnections(null, { provider });
   const conn = connections.find(c => c.id === connectionId);
   const backoffLevel = conn?.backoffLevel || 0;
 
@@ -190,7 +192,7 @@ export async function markAccountUnavailable(connectionId, status, errorText, pr
   const reason = typeof errorText === "string" ? errorText.slice(0, 100) : "Provider error";
   const lockUpdate = buildModelLockUpdate(model, cooldownMs);
 
-  await updateProviderConnection(connectionId, {
+  await updateProviderConnection(null, connectionId, {
     ...lockUpdate,
     testStatus: "unavailable",
     lastError: reason,
@@ -251,7 +253,7 @@ export async function clearAccountError(connectionId, currentConnection, model =
     Object.assign(clearObj, { testStatus: "active", lastError: null, lastErrorAt: null, backoffLevel: 0 });
   }
 
-  await updateProviderConnection(connectionId, clearObj);
+  await updateProviderConnection(null, connectionId, clearObj);
 }
 
 /**

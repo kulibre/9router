@@ -18,7 +18,7 @@ export async function POST(request) {
     }
 
     // Get active provider connections
-    const connections = await getProviderConnections({ isActive: true });
+    const connections = await getProviderConnections(null, { isActive: true });
 
     // Map connections
     const mappedConnections = connections.map(conn => ({

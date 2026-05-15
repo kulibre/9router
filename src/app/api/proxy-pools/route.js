@@ -59,7 +59,7 @@ export async function GET(request) {
       return NextResponse.json({ proxyPools });
     }
 
-    const connections = await getProviderConnections();
+    const connections = await getProviderConnections(null);
     const usageMap = buildUsageMap(connections);
 
     const enrichedProxyPools = proxyPools.map((pool) => ({

@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSettings } from "@/lib/localDb";
 import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
-import { cookies } from "next/headers";
-
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "9router-default-secret-change-me"
-);
+import { mintAppJwt } from "@/lib/authUtils";
 
 function isTunnelRequest(request, settings) {
   const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
@@ -38,24 +33,7 @@ export async function POST(request) {
     }
 
     if (isValid) {
-      const forceSecureCookie = process.env.AUTH_COOKIE_SECURE === "true";
-      const forwardedProto = request.headers.get("x-forwarded-proto");
-      const isHttpsRequest = forwardedProto === "https";
-      const useSecureCookie = forceSecureCookie || isHttpsRequest;
-
-      const token = await new SignJWT({ authenticated: true })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("24h")
-        .sign(SECRET);
-
-      const cookieStore = await cookies();
-      cookieStore.set("auth_token", token, {
-        httpOnly: true,
-        secure: useSecureCookie,
-        sameSite: "lax",
-        path: "/",
-      });
-
+      await mintAppJwt("00000000-0000-0000-0000-000000000000", "admin@local", request);
       return NextResponse.json({ success: true });
     }
 

@@ -4,7 +4,12 @@
       "Skill(update-config)",
       "Bash(npx next:*)",
       "Bash(New-Item *)",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "mcp__supabase__execute_sql"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

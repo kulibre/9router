@@ -24,7 +24,7 @@ export async function PUT(request) {
     }
 
     // Find active connection for provider
-    const connections = await getProviderConnections({ provider, isActive: true });
+    const connections = await getProviderConnections(null, { provider, isActive: true });
     const connection = connections[0];
 
     if (!connection) {
@@ -43,7 +43,7 @@ export async function PUT(request) {
       updateData.expiresAt = new Date(Date.now() + credentials.expiresIn * 1000).toISOString();
     }
 
-    await updateProviderConnection(connection.id, updateData);
+    await updateProviderConnection(null, connection.id, updateData);
 
     return NextResponse.json({ 
       success: true, 

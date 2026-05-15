@@ -585,7 +585,7 @@ async function testApiKeyConnection(connection, effectiveProxy = null) {
  * Test a single connection by ID, update DB, and return result.
  */
 export async function testSingleConnection(id) {
-  const connection = await getProviderConnectionById(id);
+  const connection = await getProviderConnectionById(null, id);
   if (!connection) return { valid: false, error: "Connection not found", latencyMs: 0, testedAt: new Date().toISOString() };
 
   const effectiveProxy = await resolveConnectionProxyConfig(connection.providerSpecificData || {});
@@ -594,7 +594,7 @@ export async function testSingleConnection(id) {
     const proxyResult = await testProxyUrl({ proxyUrl: effectiveProxy.connectionProxyUrl });
     if (!proxyResult.ok) {
       const proxyError = proxyResult.error || `Proxy test failed with status ${proxyResult.status}`;
-      await updateProviderConnection(id, {
+      await updateProviderConnection(null, id, {
         testStatus: "error",
         lastError: proxyError,
         lastErrorAt: new Date().toISOString(),
@@ -628,7 +628,7 @@ export async function testSingleConnection(id) {
     }
   }
 
-  await updateProviderConnection(id, updateData);
+  await updateProviderConnection(null, id, updateData);
 
   return { valid: result.valid, error: result.error, latencyMs, testedAt: new Date().toISOString() };
 }

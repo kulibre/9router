@@ -49,7 +49,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "mode is required" }, { status: 400 });
     }
 
-    const allConnections = await getProviderConnections({ isActive: true });
+    const allConnections = await getProviderConnections(null, { isActive: true });
 
     let connectionsToTest = [];
     if (mode === "provider" && providerId) {

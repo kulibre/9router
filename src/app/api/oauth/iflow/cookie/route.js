@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createProviderConnection } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 
 /**
  * iFlow Cookie-Based Authentication
@@ -8,6 +9,11 @@ import { createProviderConnection } from "@/models";
  */
 export async function POST(request) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { cookie } = await request.json();
 
     if (!cookie || typeof cookie !== "string") {
@@ -106,7 +112,7 @@ export async function POST(request) {
     const cookieToSave = bxAuth ? `BXAuth=${bxAuth};` : "";
 
     // Save to database
-    const connection = await createProviderConnection({
+    const connection = await createProviderConnection(user.userId, {
       provider: "iflow",
       authType: "cookie",
       name: refreshedKey.name || keyData.name,

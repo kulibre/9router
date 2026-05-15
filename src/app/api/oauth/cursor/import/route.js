@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { CursorService } from "@/lib/oauth/services/cursor";
 import { createProviderConnection } from "@/models";
+import { getServerUser } from "@/lib/authUtils";
 
 /**
  * POST /api/oauth/cursor/import
@@ -12,6 +13,11 @@ import { createProviderConnection } from "@/models";
  */
 export async function POST(request) {
   try {
+    const user = await getServerUser(request);
+    if (!user || !user.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { accessToken, machineId } = await request.json();
 
     if (!accessToken || typeof accessToken !== "string") {
@@ -40,7 +46,7 @@ export async function POST(request) {
     const userInfo = cursorService.extractUserInfo(tokenData.accessToken);
 
     // Save to database
-    const connection = await createProviderConnection({
+    const connection = await createProviderConnection(user.userId, {
       provider: "cursor",
       authType: "oauth",
       accessToken: tokenData.accessToken,

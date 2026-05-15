@@ -52,9 +52,9 @@ export async function PUT(request, { params }) {
 
     const updated = await updateProviderNode(id, updates);
 
-    const connections = await getProviderConnections({ provider: id });
+    const connections = await getProviderConnections(null, { provider: id });
     await Promise.all(connections.map((connection) => (
-      updateProviderConnection(connection.id, {
+      updateProviderConnection(null, connection.id, {
         providerSpecificData: {
           ...(connection.providerSpecificData || {}),
           prefix: prefix.trim(),

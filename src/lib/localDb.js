@@ -488,7 +488,7 @@ export async function safeRead() {}
 export async function safeWrite() {}
 export async function exportDb() {
   const [connections, nodes, proxies, settings, apiKeys, combos] = await Promise.all([
-    getProviderConnections(),
+    getProviderConnections(null),
     getProviderNodes(),
     getProxyPools(),
     getSettings(),

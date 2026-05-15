@@ -1296,7 +1296,7 @@ export async function backfillCodexEmails() {
   codexBackfillDone = true;
   try {
     const { getProviderConnections, updateProviderConnection } = await import("@/lib/localDb");
-    const connections = await getProviderConnections();
+    const connections = await getProviderConnections(null);
     const targets = connections.filter((c) => {
       if (c.provider !== "codex" || c.authType !== "oauth" || !c.idToken) return false;
       const hasEmail = !!c.email;
@@ -1316,7 +1316,7 @@ export async function backfillCodexEmails() {
         };
       }
       if (Object.keys(patch).length) {
-        await updateProviderConnection(conn.id, patch);
+        await updateProviderConnection(null, conn.id, patch);
       }
     }
   } catch (err) {
